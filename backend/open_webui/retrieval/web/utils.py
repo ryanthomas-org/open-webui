@@ -1,3 +1,4 @@
+import os
 import asyncio
 import logging
 import socket
@@ -495,7 +496,9 @@ class SafePlaywrightURLLoader(PlaywrightURLLoader, RateLimitMixin, URLProcessing
             for url in self.urls:
                 try:
                     self._safe_process_url_sync(url)
-                    page = browser.new_page()
+                    _ua = os.environ.get("DEFAULT_USER_AGENT")
+                    context = browser.new_context(user_agent=_ua) if _ua else browser.new_context()
+                    page = context.new_page()
                     response = page.goto(url, timeout=self.playwright_timeout)
                     if response is None:
                         raise ValueError(f'page.goto() returned None for url {url}')
@@ -524,7 +527,9 @@ class SafePlaywrightURLLoader(PlaywrightURLLoader, RateLimitMixin, URLProcessing
             for url in self.urls:
                 try:
                     await self._safe_process_url(url)
-                    page = await browser.new_page()
+                    _ua = os.environ.get("DEFAULT_USER_AGENT")
+                    context = await browser.new_context(user_agent=_ua) if _ua else await browser.new_context()
+                    page = await context.new_page()
                     response = await page.goto(url, timeout=self.playwright_timeout)
                     if response is None:
                         raise ValueError(f'page.goto() returned None for url {url}')
